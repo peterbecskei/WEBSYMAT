@@ -8,21 +8,24 @@ async function fetchPageContent(url) {
     const response = await fetch(url, { mode: 'cors' });
     const textfull = await response.text();
 
-    const bodyMatch = textfull.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-    if (!bodyMatch) return '';
-    let bodyHtml = bodyMatch[1];
-    bodyHtml = bodyHtml.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
-    const text = bodyHtml.replace(/<[^>]+>/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-
-    //const parser = new DOMParser();
-    //const doc = parser.parseFromString(text, 'text/html');
-    //const bodyText = doc.body.innerText || '';
-    return { 
-      body: text.slice(0, 1000),
-      size: text.length 
+    // Extract string between 'window.icomEvents.listingsPageEvent(' and ');'
+    let match = textfull.match(/window\.icomEvents\.listingsPageEvent\(([^)]*)\);/);
+    let text = '';
+    if (match && match[1]) {
+      text = match[1].replace(/\s+/g, '');
+    }
+    // Split the text by comma and put into an array
+    let textObject = [];
+    if (text) {
+      textObject = text.split(',');
+    }
+    // Optionally, log the array
+    console.log(textObject);
+    count = textObject[3] || 0;
+    console.log('Count:', count);
+    return {
+      body: count ,
+      size: textfull.length
     };
   } catch (error) {
     console.error('Fetch error:', error);
@@ -46,7 +49,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
     const { tabUrl, paused, previousSize = 0, notifications = [], unread = 0 } = 
       await chrome.storage.local.get(['tabUrl', 'paused', 'previousSize', 'notifications', 'unread']);
     if (paused || !tabUrl) return;
-    
+    // Fetch page content
     const { body, size } = await fetchPageContent(tabUrl);
     if (size && size !== previousSize) {
       const timestamp = new Date().toISOString();

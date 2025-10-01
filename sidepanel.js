@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   moreBtn.addEventListener('click', () => {
-    const confirmed = confirm('Contact us: saját céges adatok...');
+    const confirmed = confirm('Contact us: https://www.44dev.com...');
     if (confirmed) {
       chrome.tabs.create({ url: 'https://www.44dev.com' });
     }
